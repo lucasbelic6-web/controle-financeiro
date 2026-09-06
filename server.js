@@ -621,6 +621,167 @@ app.post('/api/ocr', authMiddleware, upload.single('image'), async (req, res) =>
 });
 
 // ════════════════════════════════════
+//  CHAT IA - Assistente do Sistema
+// ════════════════════════════════════
+
+function generateChatResponse(message, userId) {
+    const msg = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    // ── Saudações ──
+    if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|eai|fala|hey|hello|hi)\b/.test(msg)) {
+        const hora = new Date().getHours();
+        const saludo = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+        return { resposta: `${saludo}! 👋 Sou o assistente virtual do **Finance**. Como posso te ajudar?`, sugestoes: ['O que posso fazer?', 'Como adicionar transação', 'Como usar o OCR?'] };
+    }
+
+    // ── O que posso fazer ──
+    if (/o que (posso|eu posso|vc|voce) (fazer|ajudar|sabe)|funcionalidade|recurso|menu/.test(msg)) {
+        return { 
+            resposta: 'O **Finance** é seu controle financeiro completo! Aqui está o que você pode fazer:', 
+            sugestoes: ['Dashboard', 'Transações', 'OCR', 'Exportar dados', 'Configurações', 'Saldo'] 
+        };
+    }
+
+    // ── Dashboard ──
+    if (/dashboard|painel|inicio|home|resumo/.test(msg)) {
+        return { 
+            resposta: '📊 No **Dashboard** você encontra:\n\n• **Saldo atual** - clique em "Alterar" pra definir\n• **Total pago e pendente** do período\n• **Gráficos** por categoria e forma de pagamento\n• **Últimas transações**\n\nUse os **filtros de período** (Hoje, Semana, Mês, Ano, Tudo) pra ver diferentes visões.', 
+            sugestoes: ['Como filtrar por período?', 'Como ver otra coisa?'] 
+        };
+    }
+
+    // ── Transações ──
+    if (/transacao|transação|movto|movimentacao|add.*trans|criar.*trans|nova.*trans|adicionar/.test(msg)) {
+        return { 
+            resposta: '💡 **Criar uma transação:**\n\n1. Clique em **"Nova Transação"** (botão no dashboard ou sidebar)\n2. Preencha: descrição, valor, data\n3. Escolha: categoria, pagamento e situação\n4. Clique em **Salvar**\n\nNa aba **Transações** você vê todas, pode **editar** (ícone lápis) ou **excluir** (ícone lixeira).', 
+            sugestoes: ['Editar transação', 'Excluir transação', 'Status Pendente vs Pago'] 
+        };
+    }
+
+    // ── Editar transação ──
+    if (/editar|alterar|modificar|trocar/.test(msg) && /trans/.test(msg)) {
+        return { 
+            resposta: '✏️ **Editar transação:**\n\n1. Vá na aba **Transações**\n2. Clique no botão **amarelo** (ícone lápis) da transação\n3. Altere o que precisar\n4. Clique em **Atualizar**\n\nPronto, as mudanças são salvas na hora!', 
+            sugestoes: ['Excluir transação', 'Criar nova transação'] 
+        };
+    }
+
+    // ── Excluir ──
+    if (/excluir|deletar|apagar|remover/.test(msg)) {
+        return { 
+            resposta: '🗑️ **Excluir transação:**\n\n1. Vá na aba **Transações**\n2. Clique no botão **vermelho** (ícone lixeira)\n3. Confirme a exclusão\n\n⚠️ A exclusão é permanente!', 
+            sugestoes: ['Criar transação', 'Editar transação'] 
+        };
+    }
+
+    // ── OCR ──
+    if (/ocr|nota fiscal|cupom|imagem|foto|scanner|digitalizar|preco.*gondola|gondola/.test(msg)) {
+        return { 
+            resposta: '📷 **OCR - Reconhecimento de Documentos:**\n\n1. Clique em **"OCR"** na sidebar ou bottom nav\n2. **Arraste ou clique** pra enviar uma foto de:\n   • Cupom fiscal\n   • Nota fiscal (NF-e)\n   • Preço de gôndola\n   • Qualquer comprovante\n3. O sistema **extrai automaticamente**: valor, data, estabelecimento\n4. **Confirme ou corrija** os dados\n5. Clique em **"Confirmar e Salvar"**\n\nO OCR funciona com imagens JPG, PNG ou WEBP.', 
+            sugestoes: ['Que tipos de documento?', 'Criar transação manualmente'] 
+        };
+    }
+
+    // ── Exportar ──
+    if (/exportar|excel|csv|download|planilha|relatorio/.test(msg)) {
+        return { 
+            resposta: '📥 **Exportar dados:**\n\nNa aba **Transações**, clique em:\n• **CSV** - arquivo de texto (abre no Excel, Google Sheets)\n• **Excel** - arquivo .xlsx nativo do Excel\n\nOs arquivos incluem: data, descrição, categoria, pagamento, valor e status de todas as transações.', 
+            sugestoes: ['Ver transações', 'Análises'] 
+        };
+    }
+
+    // ── Configurações ──
+    if (/config|configuracao|configuração|categoria|pagamento|situacao|situação|criar.*categoria|editar.*categoria/.test(msg)) {
+        return { 
+            resposta: '⚙️ **Configurações:**\n\nNa aba **Configurações** você pode gerenciar:\n\n• **Categorias** - criar, editar e excluir (ex: Moradia, Alimentação)\n• **Formas de Pagamento** - Pix, Boleto, Cartão, Dinheiro\n• **Situações** - Pago, Pendente (ou criar novas)\n\nCada item tem um **nome** e uma **cor**. Essas opções aparecem nos formulários de transação.', 
+            sugestoes: ['Criar nova categoria', 'Como mudar cor?'] 
+        };
+    }
+
+    // ── Saldo ──
+    if (/saldo|dinheiro.*disponivel|quanto.*tenho|caixa/.test(msg)) {
+        return { 
+            resposta: '💰 **Saldo Atual:**\n\nNo dashboard, o card escuro no topo mostra seu saldo.\n\n• Clique em **"Alterar"** pra definir quanto dinheiro você tem hoje\n• O saldo é salvo e persiste entre acessos\n• O sistema pode calcular o **saldo disponível** (saldo - pendências)', 
+            sugestoes: ['Dashboard', 'Pendências'] 
+        };
+    }
+
+    // ── Filtros ──
+    if (/filtro|filtrar|periodo|data.*inicio|data.*fim|por.*dia|por.*semana|por.*mes|por.*ano/.test(msg)) {
+        return { 
+            resposta: '🔍 **Filtros de Período:**\n\nNo topo do Dashboard, clique nos botões:\n\n• **Hoje** - apenas transações de hoje\n• **Semana** - da semana atual\n• **Mês** - do mês atual\n• **Ano** - do ano atual\n• **Tudo** - sem filtro\n• **Personalizado** - escolha data inicial e final\n\nTodos os dados (cards, gráficos, transações) filtram junto!', 
+            sugestoes: ['Dashboard', 'Ver todas as transações'] 
+        };
+    }
+
+    // ── Status / Pago vs Pendente ──
+    if (/status|pago|pendente|pagou|nao.*pago/.test(msg)) {
+        return { 
+            resposta: '🔄 **Situação das Transações:**\n\n• **Pago** - transação já realizada\n• **Pendente** - ainda vai pagar\n\nVocê define isso ao criar/editar transação.\n\nNa aba **Configurações** pode criar novas situações (ex: "Atrasado", "Cancelado").', 
+            sugestoes: ['Criar transação', 'Configurações'] 
+        };
+    }
+
+    // ── Análises ──
+    if (/analise|analises|grafico|graficos|estatistica|estatisticas|dados/.test(msg)) {
+        return { 
+            resposta: '📈 **Análises:**\n\nNa aba **Análises** você encontra:\n\n• **Despesas por Categoria** - onde mais gasta\n• **Estatísticas Mensais** - evolução mês a mês\n\nOs gráficos usam **barras de progresso** coloridas mostrando percentual e valores.', 
+            sugestoes: ['Dashboard', 'Exportar dados'] 
+        };
+    }
+
+    // ── Login / Conta ──
+    if (/login|sair|conta|senha|cadastr|registrar|register/.test(msg)) {
+        return { 
+            resposta: '🔐 **Conta e Acesso:**\n\n• **Login:** use seu e-mail e senha na tela inicial\n• **Criar conta:** clique em "Criar conta" no login\n• **Sair:** clique em "Sair" na sidebar\n\nCada usuário tem seus próprios dados (transações, categorias, saldo).', 
+            sugestoes: ['Esqueci minha senha', 'Como usar o sistema'] 
+        };
+    }
+
+    // ── Dicas ──
+    if (/dica|dicas|trick|dica.*rapida|atalho|facil/.test(msg)) {
+        return { 
+            resposta: '💡 **Dicas rápidas:**\n\n• Use **"Tudo"** no filtro pra ver o histórico completo\n• No **OCR**, tire foto nítida pra melhor extração\n• **Exporte em CSV** pra compartilhar dados\n• Defina seu **saldo** todo mês pra controle real\n• Crie **categorias personalizadas** pro seu perfil', 
+            sugestoes: ['OCR', 'Exportar', 'Configurações'] 
+        };
+    }
+
+    // ── Problemas / Erros ──
+    if (/erro|bug|nao.*funciona|nao.*carrega|problema|defeito|lento/.test(msg)) {
+        return { 
+            resposta: '🔧 **Problemas comuns:**\n\n• **Dados não aparecem?** Verifique o filtro de período\n• **Login falhou?** Limpe o cache do navegador\n• **OCR não funciona?** Use imagem nítida, JPG/PNG\n• **Página lenta?** Pode ser o "sleep" do servidor gratuito\n\nSe persistir, tente **recarregar a página (F5)**.', 
+            sugestoes: ['Filtros', 'OCR', 'Login'] 
+        };
+    }
+
+    // ── Pagamento / Formas ──
+    if (/pix|boleto|cartao|cartão|credito|crédito|debito|débito|dinheiro/.test(msg)) {
+        return { 
+            resposta: '💳 **Formas de Pagamento:**\n\nO sistema suporta:\n• **Pix** - transferência instantânea\n• **Boleto** - pagamento bancário\n• **Cartão de Crédito**\n• **Cartão de Débito**\n• **Dinheiro**\n\nPode criar novas em **Configurações → Formas de Pagamento**.', 
+            sugestoes: ['Criar transação', 'Configurações'] 
+        };
+    }
+
+    // ── Default ──
+    return { 
+        resposta: '🤔 Não tenho certeza se entendi. Posso ajudar com:\n\n• **Dashboard** - visão geral das finanças\n• **Transações** - criar, editar, excluir\n• **OCR** - ler notas fiscais e cupons\n• **Exportar** - planilhas Excel/CSV\n• **Configurações** - categorias e pagamentos\n• **Saldo** - controle de quanto você tem\n\nTente perguntar sobre um desses assuntos!', 
+        sugestoes: ['O que posso fazer?', 'Dashboard', 'OCR', 'Transações'] 
+    };
+}
+
+app.post('/api/chat', authMiddleware, (req, res) => {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'Mensagem vazia' });
+
+    try {
+        const response = generateChatResponse(message, req.userId);
+        res.json(response);
+    } catch (err) {
+        res.status(500).json({ error: 'Erro ao processar mensagem' });
+    }
+});
+
+// ════════════════════════════════════
 //  PAGES
 // ════════════════════════════════════
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
