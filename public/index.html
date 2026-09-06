@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e;line-height:1.5}
+        .sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:linear-gradient(180deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;padding:2rem 0;z-index:100;display:flex;flex-direction:column}
+        .sidebar-brand{padding:0 1.5rem 2rem;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:1rem}
+        .sidebar-brand h2{font-size:1.3rem;font-weight:700;display:flex;align-items:center;gap:0.6rem}
+        .sidebar-brand h2 i{color:#e94560;font-size:1.5rem}
+        .sidebar-brand small{color:rgba(255,255,255,0.5);font-size:0.75rem}
+        .nav-menu{list-style:none;padding:0 0.75rem;flex:1}
+        .nav-menu li{margin-bottom:0.25rem}
+        .nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-radius:10px;cursor:pointer;transition:all 0.2s;color:rgba(255,255,255,0.65);font-weight:500;font-size:0.95rem;text-decoration:none;border:none;background:none;width:100%}
+        .nav-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+        .nav-item.active{background:rgba(233,69,96,0.15);color:#e94560;box-shadow:inset 3px 0 0 #e94560}
+        .nav-item i{width:20px;text-align:center;font-size:1.1rem}
+        .nav-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,0.1)}
+        .main{margin-left:260px;padding:2rem 2.5rem;min-height:100vh}
+        .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+        .topbar h1{font-size:1.75rem;font-weight:700;color:#1a1a2e}
+        .topbar-actions{display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap}
+        .btn{padding:0.6rem 1.25rem;border-radius:8px;border:none;font-weight:600;font-size:0.875rem;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:0.5rem}
+        .btn-primary{background:#e94560;color:#fff}.btn-primary:hover{background:#c73652;transform:translateY(-1px)}
+        .btn-secondary{background:#fff;color:#374151;border:1px solid #e2e8f0}.btn-secondary:hover{background:#f9fafb}
+        .btn-success{background:#10b981;color:#fff}.btn-success:hover{background:#059669}
+        .btn-danger{background:#ef4444;color:#fff}.btn-danger:hover{background:#dc2626}
+        .btn-warning{background:#f59e0b;color:#fff}.btn-warning:hover{background:#d97706}
+        .btn-sm{padding:0.4rem 0.85rem;font-size:0.8rem}
+        .period-bar{background:#fff;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+        .period-bar .label{font-weight:600;color:#6b7280;font-size:0.85rem;margin-right:0.5rem}
+        .period-btn{padding:0.4rem 1rem;border-radius:20px;border:1px solid #e2e8f0;background:#fff;color:#6b7280;font-weight:500;font-size:0.85rem;cursor:pointer;transition:all 0.2s}
+        .period-btn:hover{border-color:#e94560;color:#e94560}.period-btn.active{background:#e94560;color:#fff;border-color:#e94560}
+        .custom-dates{display:none;gap:0.5rem;align-items:center;margin-left:0.5rem}
+        .custom-dates input{padding:0.35rem 0.75rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.85rem;color:#374151}
+        .custom-dates span{color:#9ca3af;font-size:0.85rem}
+        .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1.25rem;margin-bottom:1.5rem}
+        .stat-card{background:#fff;border-radius:14px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.06);position:relative;overflow:hidden}
+        .stat-card::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:0 14px 0 80px;opacity:0.08}
+        .stat-card .stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:0.75rem}
+        .stat-card .stat-label{font-size:0.8rem;font-weight:500;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.25rem}
+        .stat-card .stat-value{font-size:1.65rem;font-weight:700;color:#1a1a2e;margin-bottom:0.15rem}
+        .stat-card .stat-sub{font-size:0.75rem;color:#9ca3af}
+        .stat-card.green .stat-icon{background:#d1fae5;color:#059669}.stat-card.green::after{background:#10b981}.stat-card.green .stat-value{color:#059669}
+        .stat-card.amber .stat-icon{background:#fef3c7;color:#d97706}.stat-card.amber::after{background:#f59e0b}.stat-card.amber .stat-value{color:#d97706}
+        .stat-card.blue .stat-icon{background:#dbeafe;color:#2563eb}.stat-card.blue::after{background:#3b82f6}
+        .stat-card.purple .stat-icon{background:#ede9fe;color:#7c3aed}.stat-card.purple::after{background:#8b5cf6}
+        .panels-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+        .panel{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);overflow:hidden}
+        .panel-header{padding:1rem 1.25rem;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center}
+        .panel-header h3{font-size:0.95rem;font-weight:600;color:#374151;display:flex;align-items:center;gap:0.5rem}
+        .panel-body{padding:0.5rem 1.25rem 1rem}
+        .panel-full{grid-column:1/-1}
+        .progress-item{padding:0.7rem 0;border-bottom:1px solid #f9fafb}.progress-item:last-child{border-bottom:none}
+        .progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem}
+        .progress-top .name{font-weight:500;font-size:0.9rem;color:#374151}.progress-top .amount{font-weight:600;font-size:0.9rem;color:#1a1a2e}
+        .progress-bar{height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+        .progress-fill{height:100%;border-radius:4px;transition:width 0.6s ease}
+        .progress-fill.blue{background:linear-gradient(90deg,#3b82f6,#6366f1)}.progress-fill.green{background:linear-gradient(90deg,#10b981,#34d399)}
+        .progress-fill.amber{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.progress-fill.red{background:linear-gradient(90deg,#ef4444,#f87171)}
+        .progress-fill.purple{background:linear-gradient(90deg,#8b5cf6,#a78bfa)}.progress-fill.pink{background:linear-gradient(90deg,#ec4899,#f472b6)}
+        .progress-fill.cyan{background:linear-gradient(90deg,#06b6d4,#22d3ee)}.progress-fill.indigo{background:linear-gradient(90deg,#6366f1,#818cf8)}
+        .progress-bottom{display:flex;justify-content:space-between;margin-top:0.2rem}.progress-bottom span{font-size:0.72rem;color:#9ca3af}
+        .tx-item{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid #f9fafb}.tx-item:last-child{border-bottom:none}
+        .tx-left{display:flex;align-items:center;gap:0.75rem}
+        .tx-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.9rem}
+        .tx-desc{font-weight:500;font-size:0.9rem;color:#374151}.tx-meta{font-size:0.78rem;color:#9ca3af;margin-top:0.1rem}
+        .tx-right{text-align:right}.tx-amount{font-weight:700;font-size:0.95rem}.tx-amount.pago{color:#059669}.tx-amount.pendente{color:#d97706}
+        .tx-status{display:inline-block;padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;font-weight:600;margin-top:0.15rem}
+        .table-wrap{overflow-x:auto}.table{width:100%;border-collapse:collapse}
+        .table th{background:#f9fafb;padding:0.75rem 1rem;text-align:left;font-size:0.8rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid #e5e7eb}
+        .table td{padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6;font-size:0.9rem}.table tr:hover{background:#f9fafb}.table .actions{display:flex;gap:0.4rem}
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;justify-content:center;align-items:center;backdrop-filter:blur(2px)}
+        .modal-overlay.active{display:flex}
+        .modal-box{background:#fff;border-radius:16px;width:90%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.15)}
+        .modal-top{padding:1.25rem 1.5rem;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center}
+        .modal-top h3{font-size:1.15rem;font-weight:600;color:#1a1a2e;display:flex;align-items:center;gap:0.5rem}
+        .modal-close{background:#f3f4f6;border:none;width:32px;height:32px;border-radius:8px;font-size:1.1rem;cursor:pointer;color:#6b7280;display:flex;align-items:center;justify-content:center}
+        .modal-close:hover{background:#e5e7eb;color:#374151}
+        .modal-body{padding:1.5rem}
+        .form-group{margin-bottom:1.25rem}.form-group label{display:block;margin-bottom:0.35rem;font-weight:500;font-size:0.85rem;color:#374151}
+        .form-control{width:100%;padding:0.65rem 0.85rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.9rem;transition:border-color 0.2s;background:#fff;color:#1a1a2e}
+        .form-control:focus{outline:none;border-color:#e94560}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        .modal-footer{padding:1rem 1.5rem;border-top:1px solid #f3f4f6;display:flex;gap:0.75rem;justify-content:flex-end}
+        .toast{position:fixed;top:20px;right:20px;z-index:999;padding:0.85rem 1.5rem;border-radius:10px;color:#fff;font-weight:500;font-size:0.9rem;animation:slideIn 0.3s ease;box-shadow:0 8px 25px rgba(0,0,0,0.12)}
+        .toast.success{background:#10b981}.toast.error{background:#ef4444}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .empty-state{text-align:center;padding:3rem 1rem;color:#9ca3af}.empty-state i{font-size:2.5rem;margin-bottom:0.75rem;display:block}
+        .config-section{margin-bottom:2rem}
+        .config-section h3{font-size:1.1rem;font-weight:600;color:#1a1a2e;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+        .config-list{display:flex;flex-direction:column;gap:0.5rem}
+        .config-item{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:#f9fafb;border-radius:10px;transition:background 0.2s}
+        .config-item:hover{background:#f3f4f6}
+        .config-item-left{display:flex;align-items:center;gap:0.75rem}
+        .config-item-left .dot{width:12px;height:12px;border-radius:50%}
+        .config-item-left .name{font-weight:500;font-size:0.9rem}
+        .config-item .actions{display:flex;gap:0.4rem}
+        .config-add{display:flex;gap:0.5rem;margin-bottom:1rem}
+        .config-add input{flex:1}
+        .color-input{width:40px;height:38px;padding:2px;cursor:pointer;border:1.5px solid #e2e8f0;border-radius:8px}
+        .ocr-upload{border:2px dashed #d1d5db;border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;background:#f9fafb}
+        .ocr-upload:hover,.ocr-upload.dragover{border-color:#e94560;background:#fef2f2}
+        .ocr-upload i{font-size:2.5rem;color:#9ca3af;margin-bottom:0.75rem;display:block}
+        .ocr-upload p{color:#6b7280;font-size:0.9rem}
+        .ocr-upload small{color:#9ca3af}
+        .ocr-preview{max-width:100%;max-height:200px;border-radius:8px;margin-top:1rem;display:none}
+        .ocr-confidence{display:inline-block;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:600}
+        .ocr-confidence.alta{background:#d1fae5;color:#065f46}.ocr-confidence.media{background:#fef3c7;color:#92400e}.ocr-confidence.baixa{background:#fee2e2;color:#991b1b}
+        @media(max-width:1024px){.stats-grid{grid-template-columns:repeat(2,1fr)}.panels-row{grid-template-columns:1fr}}
+        @media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:1.25rem}.stats-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.topbar{flex-direction:column;align-items:flex-start}}
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2><i class="fas fa-wallet"></i> Finance</h2>
+            <small>Controle Financeiro Pessoal</small>
+        </div>
+        <ul class="nav-menu">
+            <li><button class="nav-item active" onclick="showSection('dashboard', this)"><i class="fas fa-th-large"></i> Dashboard</button></li>
+            <li><button class="nav-item" onclick="showSection('transactions', this)"><i class="fas fa-exchange-alt"></i> Transações</button></li>
+            <li><button class="nav-item" onclick="showSection('analytics', this)"><i class="fas fa-chart-pie"></i> Análises</button></li>
+            <li><button class="nav-item" onclick="showSection('settings', this)"><i class="fas fa-cog"></i> Configurações</button></li>
+            <li style="margin-top:auto"><button class="nav-item" onclick="showOCRModal()"><i class="fas fa-camera"></i> OCR</button></li>
+            <li><button class="nav-item" onclick="showModal()"><i class="fas fa-plus-circle"></i> Nova Transação</button></li>
+        </ul>
+        <div class="nav-footer">
+            <div id="user-name" style="margin-bottom:0.5rem;color:rgba(255,255,255,0.8);font-weight:500;font-size:0.85rem">Usuário</div>
+            <button class="nav-item" onclick="logout()" style="color:#ef4444;justify-content:center;font-size:0.85rem"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </aside>
+
+    <div class="main">
+        <!-- ═══ DASHBOARD ═══ -->
+        <div id="dashboard" class="section">
+            <div class="topbar">
+                <h1>Dashboard</h1>
+                <div class="topbar-actions">
+                    <button class="btn btn-primary" onclick="showModal()"><i class="fas fa-plus"></i> Nova Transação</button>
+                </div>
+            </div>
+            <div class="period-bar">
+                <span class="label"><i class="fas fa-calendar-alt"></i> Período:</span>
+                <button class="period-btn" onclick="setPeriod('day', this)">Hoje</button>
+                <button class="period-btn" onclick="setPeriod('week', this)">Semana</button>
+                <button class="period-btn" onclick="setPeriod('month', this)">Mês</button>
+                <button class="period-btn" onclick="setPeriod('year', this)">Ano</button>
+                <button class="period-btn active" onclick="setPeriod('all', this)">Tudo</button>
+                <button class="period-btn" onclick="setPeriod('custom', this)"><i class="fas fa-sliders-h"></i> Personalizado</button>
+                <div class="custom-dates" id="custom-dates">
+                    <input type="date" id="start-date"><span>até</span><input type="date" id="end-date">
+                    <button class="btn btn-sm btn-primary" onclick="loadDashboard()">Aplicar</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" style="background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);color:#fff">
+                    <div class="stat-icon" style="background:rgba(255,255,255,0.15);color:#fff"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-label" style="color:rgba(255,255,255,0.6)">Saldo Atual</div>
+                    <div class="stat-value" id="balance" style="color:#fff">R$ 0,00</div>
+                    <div class="stat-sub" style="color:rgba(255,255,255,0.5)"><a href="#" onclick="editBalance();return false" style="color:#e94560;text-decoration:none;font-weight:600"><i class="fas fa-pen"></i> Alterar</a></div>
+                </div>
+                <div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-label">Total Pago</div><div class="stat-value" id="total-pago">R$ 0,00</div><div class="stat-sub" id="pago-period">Este mês</div></div>
+                <div class="stat-card amber"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-label">Pendente</div><div class="stat-value" id="total-pendente">R$ 0,00</div><div class="stat-sub" id="pendente-period">A pagar</div></div>
+                <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-receipt"></i></div><div class="stat-label">Transações</div><div class="stat-value" id="total-transacoes">0</div><div class="stat-sub" id="total-period">Registros</div></div>
+                <div class="stat-card purple"><div class="stat-icon"><i class="fas fa-calculator"></i></div><div class="stat-label">Ticket Médio</div><div class="stat-value" id="media-pago">R$ 0,00</div><div class="stat-sub" id="media-period">Valor médio</div></div>
+            </div>
+            <div class="panels-row">
+                <div class="panel"><div class="panel-header"><h3><i class="fas fa-tags"></i> Por Categoria</h3></div><div class="panel-body" id="dashboard-categories"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Carregando...</div></div></div>
+                <div class="panel"><div class="panel-header"><h3><i class="fas fa-credit-card"></i> Por Pagamento</h3></div><div class="panel-body" id="dashboard-payment"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Carregando...</div></div></div>
+            </div>
+            <div class="panel panel-full">
+                <div class="panel-header"><h3><i class="fas fa-history"></i> Últimas Transações</h3><button class="btn btn-sm btn-secondary" onclick="showSection('transactions', document.querySelector('.nav-menu li:nth-child(2) .nav-item'))">Ver Todas <i class="fas fa-arrow-right"></i></button></div>
+                <div class="panel-body" id="recent-transactions"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Carregando...</div></div>
+            </div>
+        </div>
+
+        <!-- ═══ TRANSACTIONS ═══ -->
+        <div id="transactions" class="section" style="display:none">
+            <div class="topbar">
+                <h1>Transações</h1>
+                <div class="topbar-actions">
+                    <button class="btn btn-secondary" onclick="exportFile('csv')"><i class="fas fa-file-csv"></i> CSV</button>
+                    <button class="btn btn-secondary" onclick="exportFile('excel')"><i class="fas fa-file-excel"></i> Excel</button>
+                    <button class="btn btn-primary" onclick="showModal()"><i class="fas fa-plus"></i> Nova Transação</button>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Pagamento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="transactions-list"><tr><td colspan="7" class="empty-state"><i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ ANALYTICS ═══ -->
+        <div id="analytics" class="section" style="display:none">
+            <div class="topbar"><h1>Análises</h1></div>
+            <div class="panels-row">
+                <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-pie"></i> Despesas por Categoria</h3></div><div class="panel-body" id="categories-chart"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i></div></div></div>
+                <div class="panel"><div class="panel-header"><h3><i class="fas fa-chart-bar"></i> Estatísticas Mensais</h3></div><div class="panel-body" id="monthly-stats"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i></div></div></div>
+            </div>
+        </div>
+
+        <!-- ═══ SETTINGS ═══ -->
+        <div id="settings" class="section" style="display:none">
+            <div class="topbar"><h1>Configurações</h1></div>
+
+            <div class="config-section">
+                <div class="panel">
+                    <div class="panel-header"><h3><i class="fas fa-tag"></i> Categorias</h3></div>
+                    <div class="panel-body">
+                        <div class="config-add">
+                            <input type="text" class="form-control" id="cat-name" placeholder="Nome da categoria" style="flex:2">
+                            <input type="color" class="color-input" id="cat-color" value="#6366f1">
+                            <button class="btn btn-success btn-sm" onclick="addConfig('categories', 'cat-name', 'cat-color')"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div class="config-list" id="categories-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <div class="panel">
+                    <div class="panel-header"><h3><i class="fas fa-credit-card"></i> Formas de Pagamento</h3></div>
+                    <div class="panel-body">
+                        <div class="config-add">
+                            <input type="text" class="form-control" id="pay-name" placeholder="Nome da forma de pagamento" style="flex:2">
+                            <input type="color" class="color-input" id="pay-color" value="#10b981">
+                            <button class="btn btn-success btn-sm" onclick="addConfig('payment-methods', 'pay-name', 'pay-color')"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div class="config-list" id="payment-methods-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <div class="panel">
+                    <div class="panel-header"><h3><i class="fas fa-flag"></i> Situações</h3></div>
+                    <div class="panel-body">
+                        <div class="config-add">
+                            <input type="text" class="form-control" id="status-name" placeholder="Nome da situação" style="flex:2">
+                            <input type="color" class="color-input" id="status-color" value="#10b981">
+                            <button class="btn btn-success btn-sm" onclick="addConfig('statuses', 'status-name', 'status-color')"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div class="config-list" id="statuses-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div id="transactionModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-top">
+                <h3 id="modal-title"><i class="fas fa-plus-circle"></i> Nova Transação</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="transaction-form">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group"><label>Descrição</label><input type="text" class="form-control" id="description" required></div>
+                        <div class="form-group"><label>Valor (R$)</label><input type="number" class="form-control" id="amount" step="0.01" required></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Data</label><input type="date" class="form-control" id="date" required></div>
+                        <div class="form-group"><label>Categoria</label><select class="form-control" id="category" required><option value="">Selecione...</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Forma de Pagamento</label><select class="form-control" id="payment" required><option value="">Selecione...</option></select></div>
+                        <div class="form-group"><label>Situação</label><select class="form-control" id="status" required><option value="">Selecione...</option></select></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> <span id="submit-text">Salvar</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Balance Modal -->
+    <div id="balanceModal" class="modal-overlay">
+        <div class="modal-box" style="max-width:400px">
+            <div class="modal-top"><h3><i class="fas fa-wallet"></i> Saldo Atual</h3><button class="modal-close" onclick="closeBalanceModal()">&times;</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Quanto você tem hoje?</label><input type="number" class="form-control" id="balance-input" step="0.01"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBalanceModal()">Cancelar</button>
+                <button class="btn btn-success" onclick="saveBalance()"><i class="fas fa-check"></i> Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCR Modal -->
+    <div id="ocrModal" class="modal-overlay">
+        <div class="modal-box" style="max-width:600px">
+            <div class="modal-top"><h3><i class="fas fa-camera"></i> OCR</h3><button class="modal-close" onclick="closeOCRModal()">&times;</button></div>
+            <div class="modal-body">
+                <div id="ocr-upload-area" class="ocr-upload" onclick="document.getElementById('ocr-file').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Clique ou arraste uma imagem aqui</p>
+                    <small>JPG, PNG ou WEBP (máx. 10MB)</small>
+                    <input type="file" id="ocr-file" accept="image/*" style="display:none" onchange="handleOCRFile(this)">
+                </div>
+                <img id="ocr-preview" class="ocr-preview">
+                <div id="ocr-loading" style="display:none;text-align:center;padding:2rem">
+                    <div style="width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #e94560;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem"></div>
+                    <p>Processando imagem...</p>
+                </div>
+                <div id="ocr-result" style="display:none;margin-top:1rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <h4 style="font-size:0.95rem;font-weight:600">Dados Extraídos</h4>
+                        <span class="ocr-confidence" id="ocr-confianca"></span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Descrição</label><input type="text" class="form-control" id="ocr-description"></div>
+                        <div class="form-group"><label>Valor (R$)</label><input type="number" class="form-control" id="ocr-amount" step="0.01"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Data</label><input type="date" class="form-control" id="ocr-date"></div>
+                        <div class="form-group"><label>Categoria</label><select class="form-control" id="ocr-category"><option value="">Selecione...</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Forma de Pagamento</label><select class="form-control" id="ocr-payment"><option value="">Selecione...</option></select></div>
+                        <div class="form-group"><label>Situação</label><select class="form-control" id="ocr-status"><option value="">Selecione...</option></select></div>
+                    </div>
+                    <details style="margin-top:0.5rem">
+                        <summary style="cursor:pointer;font-size:0.8rem;color:#6b7280">Ver texto extraído</summary>
+                        <pre id="ocr-texto" style="background:#f3f4f6;padding:0.75rem;border-radius:8px;font-size:0.75rem;max-height:150px;overflow-y:auto;margin-top:0.5rem;white-space:pre-wrap"></pre>
+                    </details>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeOCRModal()">Cancelar</button>
+                <button class="btn btn-success" id="ocr-confirm-btn" style="display:none" onclick="confirmOCR()"><i class="fas fa-check"></i> Confirmar e Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:7777/api';
+        let editingId = null, currentPeriod = 'all';
+        let allCategories = [], allPayments = [], allStatuses = [];
+
+        function getToken() { return localStorage.getItem('token'); }
+
+        async function api(endpoint, opts = {}) {
+            const r = await fetch(`${API_URL}${endpoint}`, { headers: { 'Content-Type': 'application/json', 'Authorization': getToken(), ...opts.headers }, ...opts });
+            if (r.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.replace('/'); return null; }
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        }
+
+        let toastTimeout;
+        function toast(msg, type = 'success') {
+            const old = document.querySelector('.toast'); if (old) old.remove();
+            clearTimeout(toastTimeout);
+            const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+            document.body.appendChild(t); toastTimeout = setTimeout(() => t.remove(), 3000);
+        }
+
+        function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.replace('/'); }
+
+        function showSection(name, btn) {
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(name).style.display = 'block';
+            if (btn) btn.classList.add('active');
+            if (name === 'dashboard') loadDashboard();
+            else if (name === 'transactions') loadTransactions();
+            else if (name === 'analytics') loadAnalytics();
+            else if (name === 'settings') loadSettings();
+        }
+
+        function setPeriod(p, btn) {
+            currentPeriod = p;
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('custom-dates').style.display = p === 'custom' ? 'flex' : 'none';
+            if (p !== 'custom') loadDashboard();
+        }
+
+        function fmtDate(d) { return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR'); }
+        function fmt(v) { return `R$ ${(v || 0).toFixed(2).replace('.', ',')}`; }
+
+        // ── Config Lists ──
+        async function loadConfigLists() {
+            const [c, p, s] = await Promise.all([api('/categories'), api('/payment-methods'), api('/statuses')]);
+            allCategories = c || []; allPayments = p || []; allStatuses = s || [];
+        }
+
+        function populateSelects() {
+            const catSel = document.getElementById('category');
+            const paySel = document.getElementById('payment');
+            const stsSel = document.getElementById('status');
+            catSel.innerHTML = '<option value="">Selecione...</option>' + allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            paySel.innerHTML = '<option value="">Selecione...</option>' + allPayments.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            stsSel.innerHTML = '<option value="">Selecione...</option>' + allStatuses.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        // ── Settings CRUD ──
+        async function loadSettings() {
+            await loadConfigLists();
+            renderConfigList('categories-list', allCategories, 'categories');
+            renderConfigList('payment-methods-list', allPayments, 'payment-methods');
+            renderConfigList('statuses-list', allStatuses, 'statuses');
+        }
+
+        function renderConfigList(elId, items, endpoint) {
+            const el = document.getElementById(elId);
+            if (!items.length) { el.innerHTML = '<div class="empty-state" style="padding:1rem"><i class="fas fa-inbox"></i><br>Nenhum item</div>'; return; }
+            el.innerHTML = items.map(i => `
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <div class="dot" style="background:${i.color}"></div>
+                        <span class="name">${i.name}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-sm btn-danger" onclick="deleteConfig('${endpoint}', ${i.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function addConfig(endpoint, nameId, colorId) {
+            const name = document.getElementById(nameId).value.trim();
+            const color = document.getElementById(colorId).value;
+            if (!name) return toast('Digite um nome', 'error');
+            try {
+                await api(`/${endpoint}`, { method: 'POST', body: JSON.stringify({ name, color, icon: 'fa-folder' }) });
+                document.getElementById(nameId).value = '';
+                toast('Adicionado!');
+                loadSettings();
+            } catch (e) { toast('Erro ao adicionar', 'error'); }
+        }
+
+        async function deleteConfig(endpoint, id) {
+            if (!confirm('Excluir este item?')) return;
+            try { await api(`/${endpoint}/${id}`, { method: 'DELETE' }); toast('Excluído!'); loadSettings(); } catch (e) { toast('Erro ao excluir', 'error'); }
+        }
+
+        // ── Dashboard ──
+        async function loadDashboard() {
+            try {
+                const params = new URLSearchParams({ period: currentPeriod });
+                if (currentPeriod === 'custom') {
+                    const s = document.getElementById('start-date').value, e = document.getElementById('end-date').value;
+                    if (s) params.set('startDate', s); if (e) params.set('endDate', e);
+                }
+                const sum = await api(`/summary?${params}`);
+                if (!sum) return;
+                document.getElementById('total-pago').textContent = fmt(sum.total_pago);
+                document.getElementById('total-pendente').textContent = fmt(sum.total_pendente);
+                document.getElementById('total-transacoes').textContent = sum.total_transacoes || 0;
+                document.getElementById('media-pago').textContent = fmt(sum.media_pago);
+                const labels = { day: 'Hoje', week: 'Esta Semana', month: 'Este Mês', year: 'Este Ano', all: 'Todos', custom: `${fmtDate(sum.startDate)} – ${fmtDate(sum.endDate)}` };
+                const lbl = labels[sum.period] || labels.month;
+                ['pago-period','pendente-period','total-period','media-period'].forEach(id => document.getElementById(id).textContent = lbl);
+
+                const txs = await api('/transactions');
+                if (!txs) return;
+                const filtered = sum.startDate ? txs.filter(t => t.date >= sum.startDate && t.date <= sum.endDate) : txs;
+                displayRecent(filtered.slice(0, 5));
+                await loadDashCategories(sum.startDate, sum.endDate);
+                await loadDashPayments(sum.startDate, sum.endDate);
+                await loadBalance();
+            } catch (e) { console.error(e); toast('Erro ao carregar dashboard', 'error'); }
+        }
+
+        async function loadDashCategories(s, e) {
+            const cats = await api(`/categories-stats?startDate=${s}&endDate=${e}`);
+            const el = document.getElementById('dashboard-categories');
+            if (!cats || !cats.length) { el.innerHTML = '<div class="empty-state" style="padding:1rem"><i class="fas fa-inbox"></i><br>Nenhum dado</div>'; return; }
+            const total = cats.reduce((a, c) => a + (c.total || 0), 0);
+            const colors = ['blue','green','amber','red','purple','pink','cyan','indigo'];
+            el.innerHTML = cats.map((c, i) => {
+                const pct = total > 0 ? ((c.total / total) * 100) : 0;
+                return `<div class="progress-item"><div class="progress-top"><span class="name" style="color:${c.color || '#374151'}"><i class="fas ${c.icon || 'fa-folder'}"></i> ${c.name}</span><span class="amount">${fmt(c.total)}</span></div><div class="progress-bar"><div class="progress-fill ${colors[i % colors.length]}" style="width:${pct}%"></div></div><div class="progress-bottom"><span>${c.total_transacoes} transações.</span><span>${pct.toFixed(1)}%</span></div></div>`;
+            }).join('');
+        }
+
+        async function loadDashPayments(s, e) {
+            const pays = await api(`/payment-stats?startDate=${s}&endDate=${e}`);
+            const el = document.getElementById('dashboard-payment');
+            if (!pays || !pays.length) { el.innerHTML = '<div class="empty-state" style="padding:1rem"><i class="fas fa-inbox"></i><br>Nenhum dado</div>'; return; }
+            const total = pays.reduce((a, p) => a + (p.total || 0), 0);
+            const colors = ['green','blue','purple','amber','red'];
+            el.innerHTML = pays.map((p, i) => {
+                const pct = total > 0 ? ((p.total / total) * 100) : 0;
+                return `<div class="progress-item"><div class="progress-top"><span class="name" style="color:${p.color || '#374151'}"><i class="fas ${p.icon || 'fa-credit-card'}"></i> ${p.name}</span><span class="amount">${fmt(p.total)}</span></div><div class="progress-bar"><div class="progress-fill ${colors[i % colors.length]}" style="width:${pct}%"></div></div><div class="progress-bottom"><span>${p.total_transacoes} transações.</span><span>${pct.toFixed(1)}%</span></div></div>`;
+            }).join('');
+        }
+
+        function displayRecent(txs) {
+            const el = document.getElementById('recent-transactions');
+            if (!txs.length) { el.innerHTML = '<div class="empty-state" style="padding:1rem"><i class="fas fa-inbox"></i><br>Nenhuma transação</div>'; return; }
+            el.innerHTML = txs.map(t => {
+                const stName = t.status_name || 'Pendente';
+                const stColor = t.status_color || '#f59e0b';
+                const isPago = stName === 'Pago';
+                return `<div class="tx-item"><div class="tx-left"><div class="tx-icon" style="background:${t.category_color || '#e2e8f0'}20;color:${t.category_color || '#6b7280'}"><i class="fas ${t.category_icon || 'fa-folder'}"></i></div><div><div class="tx-desc">${t.description}</div><div class="tx-meta">${fmtDate(t.date)} · ${t.category_name || 'Sem categoria'} · ${t.payment_name || 'Sem pagamento'}</div></div></div><div class="tx-right"><div class="tx-amount ${isPago ? 'pago' : 'pendente'}">${isPago ? '' : '-'}${fmt(t.amount)}</div><div class="tx-status" style="background:${stColor}20;color:${stColor}">${stName}</div></div></div>`;
+            }).join('');
+        }
+
+        // ── Transactions ──
+        async function loadTransactions() {
+            try {
+                await loadConfigLists();
+                populateSelects();
+                const txs = await api('/transactions');
+                if (!txs) return;
+                const tbody = document.getElementById('transactions-list');
+                if (!txs.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i><br>Nenhuma transação</td></tr>'; return; }
+                tbody.innerHTML = txs.map(t => {
+                    const stColor = t.status_color || '#f59e0b';
+                    return `<tr><td>${fmtDate(t.date)}</td><td><strong>${t.description}</strong></td><td><span style="color:${t.category_color || '#374151'}">${t.category_name || '-'}</span></td><td>${t.payment_name || '-'}</td><td><strong style="color:${stColor}">${fmt(t.amount)}</strong></td><td><span class="tx-status" style="background:${stColor}20;color:${stColor}">${t.status_name || '-'}</span></td><td class="actions"><button class="btn btn-sm btn-warning" onclick="editTransaction(${t.id})"><i class="fas fa-pen"></i></button><button class="btn btn-sm btn-danger" onclick="deleteTransaction(${t.id})"><i class="fas fa-trash"></i></button></td></tr>`;
+                }).join('');
+            } catch (e) { console.error(e); toast('Erro ao carregar transações', 'error'); }
+        }
+
+        // ── Analytics ──
+        async function loadAnalytics() {
+            try {
+                const [cats, monthly] = await Promise.all([api('/categories-stats'), api('/monthly-stats')]);
+                const catEl = document.getElementById('categories-chart');
+                const monEl = document.getElementById('monthly-stats');
+                const colors = ['blue','green','amber','red','purple','pink','cyan','indigo'];
+                if (!cats || !cats.length) { catEl.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><br>Sem dados</div>'; }
+                else {
+                    const total = cats.reduce((a, c) => a + (c.total || 0), 0);
+                    catEl.innerHTML = cats.map((c, i) => {
+                        const pct = total > 0 ? ((c.total / total) * 100) : 0;
+                        return `<div class="progress-item"><div class="progress-top"><span class="name">${c.name}</span><span class="amount">${fmt(c.total)}</span></div><div class="progress-bar"><div class="progress-fill ${colors[i % colors.length]}" style="width:${pct}%"></div></div></div>`;
+                    }).join('');
+                }
+                if (!monthly || !monthly.length) { monEl.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><br>Sem dados</div>'; }
+                else {
+                    monEl.innerHTML = monthly.map(m => {
+                        const name = new Date(2024, m.month - 1).toLocaleDateString('pt-BR', { month: 'long' });
+                        return `<div class="progress-item"><div class="progress-top"><span class="name" style="text-transform:capitalize">${name}</span><span class="amount">${fmt(m.total_pago)}</span></div><div class="progress-bottom"><span>Pago: ${fmt(m.total_pago)}</span><span>Pendente: ${fmt(m.total_pendente)}</span></div></div>`;
+                    }).join('');
+                }
+            } catch (e) { console.error(e); toast('Erro ao carregar análises', 'error'); }
+        }
+
+        // ── CRUD ──
+        async function deleteTransaction(id) {
+            if (!confirm('Excluir esta transação?')) return;
+            try { await api(`/transactions/${id}`, { method: 'DELETE' }); toast('Excluída!'); loadTransactions(); } catch (e) { toast('Erro ao excluir', 'error'); }
+        }
+
+        async function editTransaction(id) {
+            try {
+                await loadConfigLists();
+                populateSelects();
+                const t = await api(`/transactions/${id}`);
+                if (!t) return;
+                editingId = id;
+                document.getElementById('modal-title').innerHTML = '<i class="fas fa-edit"></i> Editar Transação';
+                document.getElementById('submit-text').textContent = 'Atualizar';
+                document.getElementById('description').value = t.description;
+                document.getElementById('amount').value = t.amount;
+                document.getElementById('date').value = t.date;
+                // Aguarda um tick para garantir que os options foram renderizados
+                setTimeout(() => {
+                    document.getElementById('category').value = t.category_id || '';
+                    document.getElementById('payment').value = t.payment_method_id || '';
+                    document.getElementById('status').value = t.status_id || '';
+                }, 50);
+                showModal();
+            } catch (e) { toast('Erro ao carregar transação', 'error'); }
+        }
+
+        function showModal() {
+            loadConfigLists().then(() => populateSelects());
+            document.getElementById('transactionModal').classList.add('active');
+            if (!editingId) document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').classList.remove('active');
+            document.getElementById('transaction-form').reset();
+            editingId = null;
+            document.getElementById('modal-title').innerHTML = '<i class="fas fa-plus-circle"></i> Nova Transação';
+            document.getElementById('submit-text').textContent = 'Salvar';
+        }
+
+        document.getElementById('transaction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                description: document.getElementById('description').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                date: document.getElementById('date').value,
+                category_id: parseInt(document.getElementById('category').value),
+                payment_method_id: parseInt(document.getElementById('payment').value),
+                status_id: parseInt(document.getElementById('status').value)
+            };
+            try {
+                if (editingId) {
+                    await api(`/transactions/${editingId}`, { method: 'PUT', body: JSON.stringify(data) });
+                    toast('Atualizada!');
+                } else {
+                    await api('/transactions', { method: 'POST', body: JSON.stringify(data) });
+                    toast('Criada!');
+                }
+                closeModal(); loadDashboard();
+            } catch (e) { toast('Erro ao salvar', 'error'); }
+        });
+
+        document.getElementById('transactionModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+        // ── Balance ──
+        async function loadBalance() {
+            try { const d = await api('/balance'); if (d) document.getElementById('balance').textContent = fmt(d.balance); } catch (e) {}
+        }
+        function editBalance() {
+            document.getElementById('balanceModal').classList.add('active');
+            api('/balance').then(d => { if (d) document.getElementById('balance-input').value = d.balance || 0; });
+        }
+        function closeBalanceModal() { document.getElementById('balanceModal').classList.remove('active'); }
+        async function saveBalance() {
+            const val = parseFloat(document.getElementById('balance-input').value) || 0;
+            try { await api('/balance', { method: 'PUT', body: JSON.stringify({ balance: val }) }); toast('Saldo atualizado!'); closeBalanceModal(); loadBalance(); } catch (e) { toast('Erro ao salvar', 'error'); }
+        }
+        document.getElementById('balanceModal').addEventListener('click', function(e) { if (e.target === this) closeBalanceModal(); });
+
+        // ── Export ──
+        function exportFile(format) {
+            window.location.href = `${API_URL}/export/${format}`;
+        }
+
+        // ── OCR ──
+        function showOCRModal() {
+            document.getElementById('ocrModal').classList.add('active');
+            loadConfigLists().then(() => {
+                const catSel = document.getElementById('ocr-category');
+                const paySel = document.getElementById('ocr-payment');
+                const stsSel = document.getElementById('ocr-status');
+                catSel.innerHTML = '<option value="">Selecione...</option>' + allCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                paySel.innerHTML = '<option value="">Selecione...</option>' + allPayments.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                stsSel.innerHTML = '<option value="">Selecione...</option>' + allStatuses.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            });
+        }
+
+        function closeOCRModal() {
+            document.getElementById('ocrModal').classList.remove('active');
+            document.getElementById('ocr-upload-area').style.display = 'block';
+            document.getElementById('ocr-preview').style.display = 'none';
+            document.getElementById('ocr-loading').style.display = 'none';
+            document.getElementById('ocr-result').style.display = 'none';
+            document.getElementById('ocr-confirm-btn').style.display = 'none';
+            document.getElementById('ocr-file').value = '';
+        }
+
+        function handleOCRFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('ocr-preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('ocr-upload-area').style.display = 'none';
+                processOCR(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function processOCR(file) {
+            document.getElementById('ocr-loading').style.display = 'block';
+            document.getElementById('ocr-result').style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const r = await fetch(`${API_URL}/ocr`, {
+                    method: 'POST',
+                    headers: { 'Authorization': getToken() },
+                    body: formData
+                });
+
+                if (!r.ok) throw new Error('Erro no OCR');
+                const data = await r.json();
+
+                document.getElementById('ocr-loading').style.display = 'none';
+                document.getElementById('ocr-result').style.display = 'block';
+                document.getElementById('ocr-confirm-btn').style.display = 'inline-flex';
+
+                // Preencher campos
+                const d = data.dados;
+                document.getElementById('ocr-description').value = d.estabelecimento || '';
+                document.getElementById('ocr-amount').value = d.valor || '';
+                document.getElementById('ocr-date').value = d.data || new Date().toISOString().split('T')[0];
+                document.getElementById('ocr-texto').textContent = data.texto_extraido || '';
+
+                // Confiança
+                const confEl = document.getElementById('ocr-confianca');
+                confEl.textContent = `Confiança: ${d.confianca}`;
+                confEl.className = `ocr-confidence ${d.confianca}`;
+
+                // Selecionar categoria sugerida
+                if (d.categoria_sugerida) {
+                    const catOpts = document.getElementById('ocr-category').options;
+                    for (let i = 0; i < catOpts.length; i++) {
+                        if (catOpts[i].text === d.categoria_sugerida) {
+                            document.getElementById('ocr-category').selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Selecionar pagamento sugerido
+                if (d.forma_pagamento_sugerida) {
+                    const payOpts = document.getElementById('ocr-payment').options;
+                    for (let i = 0; i < payOpts.length; i++) {
+                        if (payOpts[i].text === d.forma_pagamento_sugerida) {
+                            document.getElementById('ocr-payment').selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Status padrão: Pago
+                const stsOpts = document.getElementById('ocr-status').options;
+                for (let i = 0; i < stsOpts.length; i++) {
+                    if (stsOpts[i].text === 'Pago') {
+                        document.getElementById('ocr-status').selectedIndex = i;
+                        break;
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('ocr-loading').style.display = 'none';
+                document.getElementById('ocr-upload-area').style.display = 'block';
+                document.getElementById('ocr-preview').style.display = 'none';
+                toast('Erro ao processar imagem', 'error');
+            }
+        }
+
+        async function confirmOCR() {
+            const data = {
+                description: document.getElementById('ocr-description').value || 'Compra',
+                amount: parseFloat(document.getElementById('ocr-amount').value) || 0,
+                date: document.getElementById('ocr-date').value || new Date().toISOString().split('T')[0],
+                category_id: parseInt(document.getElementById('ocr-category').value) || null,
+                payment_method_id: parseInt(document.getElementById('ocr-payment').value) || null,
+                status_id: parseInt(document.getElementById('ocr-status').value) || null
+            };
+
+            try {
+                await api('/transactions', { method: 'POST', body: JSON.stringify(data) });
+                toast('Transação salva com sucesso!');
+                closeOCRModal();
+                if (document.getElementById('dashboard').style.display !== 'none') loadDashboard();
+                if (document.getElementById('transactions').style.display !== 'none') loadTransactions();
+            } catch (e) {
+                toast('Erro ao salvar transação', 'error');
+            }
+        }
+
+        document.getElementById('ocrModal').addEventListener('click', function(e) { if (e.target === this) closeOCRModal(); });
+
+        // Drag & drop
+        const ocrArea = document.getElementById('ocr-upload-area');
+        ocrArea.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
+        ocrArea.addEventListener('dragleave', function(e) { e.preventDefault(); this.classList.remove('dragover'); });
+        ocrArea.addEventListener('drop', function(e) {
+            e.preventDefault(); this.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                document.getElementById('ocr-file').files = e.dataTransfer.files;
+                handleOCRFile(document.getElementById('ocr-file'));
+            }
+        });
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!getToken()) { window.location.replace('/'); return; }
+            try { const u = JSON.parse(localStorage.getItem('user') || '{}'); if (u.name) document.getElementById('user-name').textContent = u.name; } catch(e) {}
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>

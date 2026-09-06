@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Controle Financeiro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f23;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .login-wrapper {
+            display: flex;
+            width: 900px;
+            min-height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+        }
+
+        /* ── Left Panel ── */
+        .brand-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #e94560 0%, #c73652 50%, #a82040 100%);
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-panel::before {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -80px; left: -80px;
+        }
+
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            bottom: -60px; right: -60px;
+        }
+
+        .brand-panel i.logo {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.2));
+        }
+
+        .brand-panel h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-panel p {
+            opacity: 0.85;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 260px;
+        }
+
+        .features {
+            margin-top: 2rem;
+            text-align: left;
+            width: 100%;
+            max-width: 240px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .feature-item i {
+            width: 28px;
+            height: 28px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* ── Right Panel ── */
+        .form-panel {
+            flex: 1;
+            background: #1a1a2e;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-panel h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-panel .subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 0.85rem 0.8rem 2.75rem;
+            background: #16213e;
+            border: 1.5px solid #2a2a4a;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        .form-control::placeholder { color: #4b5563; }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.85rem;
+            background: #e94560;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-login:hover { background: #c73652; transform: translateY(-1px); }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .toggle-text a {
+            color: #e94560;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-text a:hover { text-decoration: underline; }
+
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #f87171;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-msg.show { display: block; }
+
+        @media (max-width: 768px) {
+            .login-wrapper { flex-direction: column; width: 95%; min-height: auto; }
+            .brand-panel { padding: 2rem; }
+            .features { display: none; }
+            .form-panel { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <!-- Left Brand Panel -->
+        <div class="brand-panel">
+            <i class="fas fa-wallet logo"></i>
+            <h1>Finance</h1>
+            <p>Controle financeiro completo e moderno</p>
+            <div class="features">
+                <div class="feature-item"><i class="fas fa-chart-line"></i> Dashboard com analytics</div>
+                <div class="feature-item"><i class="fas fa-exchange-alt"></i> Gerenciar transações</div>
+                <div class="feature-item"><i class="fas fa-file-excel"></i> Exportar para Excel</div>
+                <div class="feature-item"><i class="fas fa-shield-alt"></i> Dados protegidos</div>
+            </div>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="form-panel">
+            <!-- Login Form -->
+            <div id="login-form-wrapper">
+                <h2>Bem-vindo de volta</h2>
+                <p class="subtitle">Entre com sua conta para acessar</p>
+
+                <div class="error-msg" id="login-error"></div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" class="form-control" id="login-email" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" id="login-password" placeholder="Sua senha" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+                </form>
+
+                <div class="toggle-text">
+                    Não tem conta? <a onclick="showRegister()">Criar conta</a>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form-wrapper" style="display: none;">
+                <h2>Criar conta</h2>
+                <p class="subtitle">Preencha para começar a usar</p>
+
+                <div class="error-msg" id="register-error"></div>
+
+                <form id="register-form">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-user"></i>
+                            <input type="text" class="form-control" id="reg-name" placeholder="Seu nome" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" class="form-control" id="reg-email" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Senha</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" id="reg-password" placeholder="Mínimo 4 caracteres" required minlength="4">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-login"><i class="fas fa-user-plus"></i> Criar Conta</button>
+                </form>
+
+                <div class="toggle-text">
+                    Já tem conta? <a onclick="showLogin()">Fazer login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:7777/api';
+
+        // Check if already logged in
+        if (localStorage.getItem('token') && localStorage.getItem('user')) {
+            window.location.replace('/app');
+        }
+
+        function showRegister() {
+            document.getElementById('login-form-wrapper').style.display = 'none';
+            document.getElementById('register-form-wrapper').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('register-form-wrapper').style.display = 'none';
+            document.getElementById('login-form-wrapper').style.display = 'block';
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function hideError(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError('login-error');
+
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showError('login-error', data.error || 'Erro ao fazer login');
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.replace('/app');
+            } catch (err) {
+                showError('login-error', 'Erro de conexão com o servidor');
+            }
+        });
+
+        // Register
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError('register-error');
+
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const res = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showError('register-error', data.error || 'Erro ao registrar');
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.replace('/app');
+            } catch (err) {
+                showError('register-error', 'Erro de conexão com o servidor');
+            }
+        });
+    </script>
+</body>
+</html>
